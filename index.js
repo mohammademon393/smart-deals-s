@@ -25,10 +25,17 @@ async function run() {
 
         const db = client.db("smart_user");
         const productsCollection = db.collection("products");
+        const bidsCollection = db.collection("bids");
 
         // GET products
         app.get('/products', async (req, res)=> {
-            const cursor = productsCollection.find().sort({ price_min: 1});
+
+            const email = req.query.email;
+            const query = {};
+            if (email) {
+                query.email = email;
+            }
+            const cursor = productsCollection.find(query);
             const result = await cursor.toArray();
             res.send(result);
         })
@@ -70,7 +77,27 @@ async function run() {
             }
             const result = await productsCollection.updateOne(query, update);
             res.send(result);
-        })
+        });
+
+        // bids releted apis
+        app.get('/bids', async (req,res)=>{
+
+            const email = req.query.email;
+            const query = {};
+            if (email) {
+                query.buyer_email = email;
+            }
+
+            const cursor = bidsCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        });
+
+        app.post('/bids', async(req,res)=>{
+            const newBid = req.body;
+            const result = await bidsCollection.insertOne(newBid);
+            res.send(result);
+        });
 
         console.log("MongoDB connected successfully!");
     } catch (error) {
