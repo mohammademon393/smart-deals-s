@@ -2,16 +2,15 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 3000;
-
 
 // Middleware 
 app.use(cors());
 app.use(express.json());
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vknfgr8.mongodb.net/?appName=Cluster0`;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
@@ -22,36 +21,70 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-        // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
-        const db = client.db("smart_db");
+        const db = client.db("smart_user");
         const productsCollection = db.collection("products");
 
-
-        app.get('/products',async(req,res)=>{
-            const newProducts = req.body;
-            const result = await productsCollection.insertOne(newProducts);
+        // GET products
+        app.get('/products', async (req, res)=> {
+            const cursor = productsCollection.find().sort({ price_min: 1});
+            const result = await cursor.toArray();
+            res.send(result);
         })
-        
 
-        // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
-    } finally {
-        // Ensures that the client will close when you finish/error
-        await client.close();
+        // GET products by id
+        app.get('/products/:id', async (req, res)=>{
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id)};
+            const result = await productsCollection.findOne(query);
+            res.send(result);
+        })
+
+        // POST product
+        app.post('/products', async (req, res) => {
+            const newProduct = req.body;
+            const result = await productsCollection.insertOne(newProduct);
+            res.send(result);
+        });
+
+        // delete products
+        app.delete('/products/:id', async (req, res)=>{
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id)};
+            const result = await productsCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        // Patch products
+        app.patch('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedProduct = req.body;
+            const query = { _id: new ObjectId(id)};
+            const update = {
+                $set: {
+                    name: updatedProduct.name,
+                    price: updatedProduct.price,
+                    category: updatedProduct.category
+                }
+            }
+            const result = await productsCollection.updateOne(query, update);
+            res.send(result);
+        })
+
+        console.log("MongoDB connected successfully!");
+    } catch (error) {
+        console.error(error);
     }
 }
-run().catch(console.dir);
+run();
 
 // Root Endpoint 
 app.get('/', (req, res) => {
     res.send("smart deals server is running");
-})
+});
 
 // Start the server 
-app.listen(port, ()=>{
+app.listen(port, () => {
     console.log(`smart deals server is running on port: ${port}`);
-    
-})
+});
