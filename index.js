@@ -28,7 +28,7 @@ async function run() {
         const bidsCollection = db.collection("bids");
 
         // GET products
-        app.get('/products', async (req, res)=> {
+        app.get('/products', async (req, res) => {
 
             const email = req.query.email;
             const query = {};
@@ -41,9 +41,9 @@ async function run() {
         })
 
         // GET products by id
-        app.get('/products/:id', async (req, res)=>{
+        app.get('/products/:id', async (req, res) => {
             const id = req.params.id;
-            const query = { _id: new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const result = await productsCollection.findOne(query);
             res.send(result);
         })
@@ -56,9 +56,9 @@ async function run() {
         });
 
         // delete products
-        app.delete('/products/:id', async (req, res)=>{
+        app.delete('/products/:id', async (req, res) => {
             const id = req.params.id;
-            const query = { _id: new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const result = await productsCollection.deleteOne(query);
             res.send(result);
         })
@@ -67,7 +67,7 @@ async function run() {
         app.patch('/products/:id', async (req, res) => {
             const id = req.params.id;
             const updatedProduct = req.body;
-            const query = { _id: new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const update = {
                 $set: {
                     name: updatedProduct.name,
@@ -80,7 +80,8 @@ async function run() {
         });
 
         // bids releted apis
-        app.get('/bids', async (req,res)=>{
+        //get bids
+        app.get('/bids', async (req, res) => {
 
             const email = req.query.email;
             const query = {};
@@ -93,9 +94,26 @@ async function run() {
             res.send(result);
         });
 
-        app.post('/bids', async(req,res)=>{
+        // get bids by id
+        app.get('/bids/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await bidsCollection.findOne(query);
+            res.send(result);
+        });
+
+        // post bids
+        app.post('/bids', async (req, res) => {
             const newBid = req.body;
             const result = await bidsCollection.insertOne(newBid);
+            res.send(result);
+        });
+
+        // delete bids
+        app.delete('/bids/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await bidsCollection.deleteOne(query);
             res.send(result);
         });
 
