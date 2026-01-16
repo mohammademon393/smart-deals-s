@@ -59,15 +59,25 @@ async function run() {
             const cursor = productsCollection.find(query);
             const result = await cursor.toArray();
             res.send(result);
+        });
+
+
+        app.get('/latest-products', async(req,res)=>{
+            const cursor = productsCollection.find().sort({ created_at: -1}).limit(6);
+            const result = await cursor.toArray();
+            res.send(result);
         })
 
         // GET products by id
         app.get('/products/:id', async (req, res) => {
             const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
+
+            const query = { _id: id }; // 🔥 STRING match
             const result = await productsCollection.findOne(query);
+
             res.send(result);
-        })
+        });
+
 
         // POST product
         app.post('/products', async (req, res) => {
@@ -101,6 +111,7 @@ async function run() {
         });
 
         // bids releted apis
+
         //get bids
         app.get('/bids', async (req, res) => {
 
@@ -122,6 +133,16 @@ async function run() {
             const result = await bidsCollection.findOne(query);
             res.send(result);
         });
+
+        // product/bids/:productId
+        app.get('/product/bids/:productId', async (req, res) => {
+            const productId = req.params.productId;
+            const query = { product: productId };
+            const cursor = bidsCollection.find(query).sort({bid_price: -1});
+            const result = await cursor.toArray();
+            res.send(result);
+        });
+
 
         // post bids
         app.post('/bids', async (req, res) => {
