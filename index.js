@@ -112,7 +112,7 @@ async function run() {
 
         // bids releted apis
 
-        //get bids
+        //get all bids
         app.get('/bids', async (req, res) => {
 
             const email = req.query.email;
@@ -158,6 +158,14 @@ async function run() {
             const result = await bidsCollection.deleteOne(query);
             res.send(result);
         });
+
+        // delete api in my bids
+        app.get('/bids/:id', async (req,res)=>{
+            const id = req.params.id;
+            const query = {_id: new ObjectId(id)};
+            const result = await bidsCollection.deleteOne(query);
+            res.send(result);
+        })
 
         console.log("MongoDB connected successfully!");
     } catch (error) {
