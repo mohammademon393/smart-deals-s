@@ -3,11 +3,44 @@ const cors = require('cors');
 const app = express();
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+var admin = require("firebase-admin");
 const port = process.env.PORT || 3000;
+
+// ১. DNS সমস্যা সমাধানের জন্য এই দুটি লাইন যোগ করুন
+const dns = require('node:dns');
+dns.setServers(['8.8.8.8', '1.1.1.1']);
+
+//fireBase admin sdk
+var serviceAccount = require("./smart-deals-firebase-admin-key.json");
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
 
 // Middleware 
 app.use(cors());
 app.use(express.json());
+
+// Logger middleware
+const logger = (req, res, next) => {
+    console.log('logger middleware info');
+    next();
+    
+}
+const verifyFirebaseToken = (req, res, next) => {
+    console.log('on the verifyfirebase token', req.headers.authorization);
+    if(!req.headers.authorization){
+        //do  not allow to go next
+        return res.status(401).send({message:"Unauthorized access"});
+    }
+    const token = req.headers.authorization.split(' ')[1]
+    if (!token) {
+        return res.status(401).send({message:"Unauthorized Token"});
+    }
+
+    next();
+}
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vknfgr8.mongodb.net/?appName=Cluster0`;
 
@@ -113,7 +146,10 @@ async function run() {
         // bids releted apis
 
         //get all bids
-        app.get('/bids', async (req, res) => {
+        app.get('/bids', logger,verifyFirebaseToken, async (req, res) => {
+            
+            // console.log('headers', req.headers);
+            
 
             const email = req.query.email;
             const query = {};
